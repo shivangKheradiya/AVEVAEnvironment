@@ -1,14 +1,86 @@
 define object reportExtractor
-  member .scope                         is STRING
+
+  member .scope                         is DBREF
   member .scopeElementTypes             is STRING
   member .filter                        is STRING
+  member .elements                      is ARRAY
   member .expressions                   is ARRAY
+  member .result                        is ARRAY
+  member .ppBoreResult                  is ARRAY
+  member .ppConnResult                  is ARRAY
+  member .flangeFaceCount               is ARRAY
+
 endobject
 
 define method .reportExtractor()
 
 endmethod
 
-define method .test()
+define method .CollectAllElements()
+
+  !this.elements                       = !!collectAllFor( !this.scopeElementTypes , !this.filter , !this.scope)
+
+endmethod
+
+define method .evaluateExpressions()
   
+  do !idx indices !this.elements
+    do !idy indices !this.expressions
+      !this.result[!idx][!idy]        = !this.elements[!idx].evaluate( object BLOCK ( !this.expressions[!idy] ) )
+    enddo
+  enddo
+
+endmethod
+
+define method .evaluateConnectionPointData()
+  
+  do !idx indices !this.elements
+    !this.flangeFaceCount[!idx]             = 0
+    do !idy from 1 to 5
+      !isValidPP                            = !this.elements[!idx].pplst.findfirst(!idy).set()
+      if (!isValidPP) then
+        !this.ppConnResult[!idx][!idy]        = !this.elements[!idx].ppConnect[!idy]
+        !this.ppBoreResult[!idx][!idy]        = !this.elements[!idx].ppbor[!idy]
+        !isFlangeFace                         = !this.ppConnResult[!idx][!idy].substring(1,1).eq('F') or !this.ppConnResult[!idx][!idy].substring(1,2).eq('WF')
+        
+        -- Categorize Connection point into The Size Range
+        !borea                                = object BORE(25mm)
+        !boreb                                = object BORE(50mm) 
+        !borec                                = object BORE(80mm)
+        !bored                                = object BORE(275mm) 
+        if ( !this.ppBoreResult[!idx][!idy].gt(!borea) and !boreb.leq(!this.ppBoreResult[!idx][!idy]) ) then
+          !this.ppBoreCategory[!idx][!idy]    = |1<=2|
+        elseif( !this.ppBoreResult[!idx][!idy].gt(!boreb) and !borec.leq(!this.ppBoreResult[!idx][!idy])) then
+          !this.ppBoreCategory[!idx][!idy]    = |2<=3|
+        elseif(!this.ppBoreResult[!idx][!idy].gt(!borec) and !bored.leq(!this.ppBoreResult[!idx][!idy])) then
+          !this.ppBoreCategory[!idx][!idy]    = |3<=11|
+        else
+          !this.ppBoreCategory[!idx][!idy]    = |>11|
+        endif
+
+        if ( !isFlangeFace ) then
+          !this.flangeFaceCount[!idx]         = !this.flangeFaceCount[!idx] + 1
+        endif
+
+      else
+        !this.ppConnResult[!idx][!idy]        = ||
+        !this.ppBoreCategory[!idx][!idy]      = ||
+        !this.ppBoreResult[!idx][!idy]        = object BORE( 0mm )
+      endif
+    enddo
+  enddo
+
+endmethod
+
+define method .test()
+  !!x = object reportExtractor()
+  !!x.scopeElementTypes = |PIPE|
+  !!x.scope = /SITE-PIPING-AREA01
+  !!x.filter = ||
+  !!x.EXPRESSIONS[1] = |bore|
+  !!x.EXPRESSIONS[2] = |name|
+  !!x.EXPRESSIONS[3] = |pspec|
+  !!x.CollectAllElements()
+  !!x.evaluateExpressions()
+  !!x.evaluateConnectionPointData()
 endmethod
