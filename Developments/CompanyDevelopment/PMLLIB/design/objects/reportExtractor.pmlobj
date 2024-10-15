@@ -1,0 +1,14 @@
+define object reportExtractor
+  member .scope                         is STRING
+  member .scopeElementTypes             is STRING
+  member .filter                        is STRING
+  member .expressions                   is ARRAY
+endobject
+
+define method .reportExtractor()
+
+endmethod
+
+define method .test()
+  
+endmethod
