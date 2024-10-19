@@ -3,8 +3,8 @@ REPR TUBE ON
 REPRE OBST OFF
 REPRE INSUL OFF
 
-!SITEFUNC               = object string()
-!PSERVICE               = object string()
+!siteFunc               = object string()
+!pService               = object string()
 
 !ReviewFileSettingDir   = !!evar(|REVIEW_FILE_SETTINGS_DIR|)
 !ReviewFileEvar         = !!evar(|REVIEW_FILE_DIR|)
@@ -16,21 +16,21 @@ var !projCode project code
 !iReviewFileDir         = !ReviewFileEvar + !projCode + |/| + !projCode + |_Insu.rvm|
 !attFilesFilesName      = !ReviewFileEvar + !projCode + |/| + !projCode
 
-!siteFile               = object file(!siteFileDir)
-!pServFile              = object file(!pServFileDir)
+!siteFile               = object file( !siteFileDir )
+!pServFile              = object file( !pServFileDir )
 
-!siteList = !siteFile.readfile()
-!pServList = !pServFile.readfile()
+!siteList               = !siteFile.readfile()
+!pServList              = !pServFile.readfile()
 
 do !s indices !siteList
-  !SPLINE = !siteList[$!s].SPLIT()
-  --Q VAR !SPLINE
-  IF !S EQ  1 THEN
-  !SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2]
-  ELSE
-  !SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2] & | OR | & !SITEFUNC
-  ENDIF
-  --Q VAR !SITEFUNC
+  !spliteLine           = !siteList[$!s].split()
+  --Q VAR !spliteLine
+  if !S EQ  1 then
+    !siteFunc           =  !spliteLine[1] &| OF SITE EQ | & !spliteLine[2]
+  else
+    !siteFunc           =  !spliteLine[1] &| OF SITE EQ | & !spliteLine[2] & | OR | & !siteFunc
+  endif
+  --Q VAR !siteFunc
 enddo
 
 !siteFile.CLOSE()
@@ -63,9 +63,9 @@ EXPORT AUTOCOLOUR ALL NOZZ 	COLOUR 	10 	TRANSLUCENCY ( 0 ) EDGES ON
 --EXPORT AUTOCOLOUR ALL PIPE 	COLOUR 	5 	TRANSLUCENCY ( 0 ) EDGES ON
 
 do !s indices !pServList
-  !SPLINE = !pServList[$!s].SPLIT()
-  q var !SPLINE[1] !SPLINE[2]
-  EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , |$!SPLINE[1]| ) 	NEQ 0 )	COLOUR 	$!SPLINE[2]	TRANSLUCENCY ( 0 ) EDGES ON
+  !spliteLine           = !pServList[$!s].split()
+  -- q var !spliteLine[1] !spliteLine[2]
+  EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , |$!spliteLine[1]| ) 	NEQ 0 )	COLOUR 	$!spliteLine[2]	TRANSLUCENCY ( 0 ) EDGES ON
 enddo
 
 EXPORT ALL SITES WITH $!SITEFUNC
@@ -81,20 +81,19 @@ EXPORT HOLES ON
 EXPORT REPRE ON
 
 --do !s indices !pServList
---!SPLINE = !pServList[$!s].SPLIT()
---EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , !SPLINE[1] ) 	NEQ 0 )	COLOUR 	$!SPLINE[2]	TRANSLUCENCY ( 0 ) EDGES ON
+--!spliteLine = !pServList[$!s].SPLIT()
+--EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , !spliteLine[1] ) 	NEQ 0 )	COLOUR 	$!spliteLine[2]	TRANSLUCENCY ( 0 ) EDGES ON
 --enddo
 
 EXPORT ALL SITES WITH $!SITEFUNC
 EXPORT FINISH
 
-
-var !SITE collect all site WITH $!SITEFUNC
-do !i indices !SITE
-  $!SITE[$!i]
+var !site collect all site WITH $!SITEFUNC
+do !i indices !site
+  $!site[$!i]
   !!attdumpFile( !attFilesFilesName &|_| & !i & |.att|)
 enddo
 
-!pServFile.CLOSE()
+!pServFile.close()
 
 FINISH
