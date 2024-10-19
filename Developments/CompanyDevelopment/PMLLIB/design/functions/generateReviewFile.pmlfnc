@@ -3,28 +3,39 @@ REPR TUBE ON
 REPRE OBST OFF
 REPRE INSUL OFF
 
-!SITEFUNC = object string()
-!PSERVICE = object string()
-!siteFile = object file(|K:\REVIEW\MAC\ILG\SITENAMES.txt|)
-!pServFile = object file(|K:\REVIEW\MAC\ILG\PSERVICE.txt|)
+!SITEFUNC               = object string()
+!PSERVICE               = object string()
+
+!ReviewFileSettingDir   = !!evar(|REVIEW_FILE_SETTINGS_DIR|)
+!ReviewFileEvar         = !!evar(|REVIEW_FILE_DIR|)
+
+var !projCode project code
+!siteFileDir            = !ReviewFileSettingDir + !projCode + |/SiteConditions.txt|
+!pServFileDir           = !ReviewFileSettingDir + !projCode + |/PipeServices.txt|
+!pReviewFileDir         = !ReviewFileEvar + !projCode + |/| + !projCode + |.rvm|
+!iReviewFileDir         = !ReviewFileEvar + !projCode + |/| + !projCode + |_Insu.rvm|
+!attFilesFilesName      = !ReviewFileEvar + !projCode + |/| + !projCode
+
+!siteFile               = object file(!siteFileDir)
+!pServFile              = object file(!pServFileDir)
+
 !siteList = !siteFile.readfile()
 !pServList = !pServFile.readfile()
 
 do !s indices !siteList
-!SPLINE = !siteList[$!s].SPLIT()
---Q VAR !SPLINE
-IF !S EQ  1 THEN
-!SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2]
-ELSE
-!SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2] & | OR | & !SITEFUNC
-ENDIF
---Q VAR !SITEFUNC
+  !SPLINE = !siteList[$!s].SPLIT()
+  --Q VAR !SPLINE
+  IF !S EQ  1 THEN
+  !SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2]
+  ELSE
+  !SITEFUNC =  !SPLINE[1] &| OF SITE EQ | & !SPLINE[2] & | OR | & !SITEFUNC
+  ENDIF
+  --Q VAR !SITEFUNC
 enddo
 
 !siteFile.CLOSE()
 
-
-EXPORT FILE /K:\REVIEW\ILG\ILG.RVM OVER
+EXPORT FILE /$!PReviewFileDir OVER
 EXPORT HOLES ON 
 EXPORT REPRE ON
 
@@ -52,9 +63,9 @@ EXPORT AUTOCOLOUR ALL NOZZ 	COLOUR 	10 	TRANSLUCENCY ( 0 ) EDGES ON
 --EXPORT AUTOCOLOUR ALL PIPE 	COLOUR 	5 	TRANSLUCENCY ( 0 ) EDGES ON
 
 do !s indices !pServList
-!SPLINE = !pServList[$!s].SPLIT()
-q var !SPLINE[1] !SPLINE[2]
-EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , |$!SPLINE[1]| ) 	NEQ 0 )	COLOUR 	$!SPLINE[2]	TRANSLUCENCY ( 0 ) EDGES ON
+  !SPLINE = !pServList[$!s].SPLIT()
+  q var !SPLINE[1] !SPLINE[2]
+  EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , |$!SPLINE[1]| ) 	NEQ 0 )	COLOUR 	$!SPLINE[2]	TRANSLUCENCY ( 0 ) EDGES ON
 enddo
 
 EXPORT ALL SITES WITH $!SITEFUNC
@@ -64,7 +75,7 @@ EXPORT FINISH
 REPRE OBST ON TRANSLUCENCY 75
 REPRE INSUL ON TRANSLUCENCY 75
 
-EXPORT FILE /K:\REVIEW\ILG\ILGInsu.RVM OVER
+EXPORT FILE /$!IReviewFileDir OVER
 EXPORT AUTOCOLOR DISPLAYEXPORT ON
 EXPORT HOLES ON
 EXPORT REPRE ON
@@ -80,8 +91,8 @@ EXPORT FINISH
 
 var !SITE collect all site WITH $!SITEFUNC
 do !i indices !SITE
-$!SITE[$!i]
-!!attdumpFile(|K:\REVIEW\ILG\ILG| & !i & |.att|)
+  $!SITE[$!i]
+  !!attdumpFile( !attFilesFilesName &|_| & !i & |.att|)
 enddo
 
 !pServFile.CLOSE()

@@ -5,23 +5,28 @@
 :: ----------------------------------------------------
 
 :: Set These Variable To Enter to Custom Environment
-set DEVELOPMENT_PATH=C:\Developments
-set CP_PROJECTS_DIR=""
-set REF_PROJECTS_DIR=""
+set DEVELOPMENT_PATH=C:\Developments\
+
+set CP_PROJECTS_DIR=C:\Projects\
+set REF_PROJECTS_DIR=C:\Developments\ReferenceProjects\
+
 set AVEVA_DESIGN_USER=C:\AVEVA_User_Data\E3DUserFiles\
 set AVEVA_DESIGN_WORK=C:\AVEVA_User_Data\e3dwork\
 set PDMSUSER=C:\AVEVA_User_Data\PDMSUserFiles\
 set PDMSWK=C:\AVEVA_User_Data\pdmswork\
 
+set REVIEW_FILE_SETTINGS_DIR=%DEVELOPMENT_PATH%ReviewFileSettings\
+set REVIEW_FILE_DIR=C:\ReviewFiles\
+
 :: These Paths will be setup automatically but if company wish it can be changed
-set CP_DEVELOPMENT_PATH=%DEVELOPMENT_PATH%\CompanyDevelopment
-set TP_DEVELOPMENT_PATH=%DEVELOPMENT_PATH%\ThirdPartyDevelopment
+set CP_DEVELOPMENT_PATH=%DEVELOPMENT_PATH%CompanyDevelopment
+set TP_DEVELOPMENT_PATH=%DEVELOPMENT_PATH%ThirdPartyDevelopment
 
 set AVEVA_DESIGN_DFLTS=%CP_DEVELOPMENT_PATH%\data\dflts\;%TP_DEVELOPMENT_PATH%\data\dflts\;%AVEVA_DESIGN_DFLTS%
 :: set AVEVA_DESIGN_PLOTS=%CP_DEVELOPMENT_PATH%\PMLUI\plots;%AVEVA_DESIGN_INSTALLED_DIR%\pmlui\plots\
 
-set CAF_ADDINS_PATH=%AVEVA_DESIGN_INSTALLED_DIR%\;%CP_DEVELOPMENT_PATH%\dlls\;%TP_DEVELOPMENT_PATH%\dlls\;%CAF_ADDINS_PATH%
-set CAF_UIC_PATH=%AVEVA_DESIGN_INSTALLED_DIR%\;%CP_DEVELOPMENT_PATH%\uic\;%TP_DEVELOPMENT_PATH%\uic\;%CAF_UIC_PATH%
+set CAF_ADDINS_PATH=%AVEVA_DESIGN_INSTALLED_DIR%\;%CAF_ADDINS_PATH%;%TP_DEVELOPMENT_PATH%\dlls\;%CP_DEVELOPMENT_PATH%\dlls\
+set CAF_UIC_PATH=%AVEVA_DESIGN_INSTALLED_DIR%\;%CAF_UIC_PATH%;%TP_DEVELOPMENT_PATH%\uic\;%CP_DEVELOPMENT_PATH%\uic\
 
 :: Add These Paths if you need
 :: set AVEVA_DESIGN_ABA_BATCH=%AVEVA_DESIGN_USER%\batchFiles\
@@ -47,3 +52,9 @@ set PMLUI=%CP_DEVELOPMENT_PATH%\pmlui\;%TP_DEVELOPMENT_PATH%\pmlui\;%PMLUI%
 :: ----------------------------------------------------
 :: syscom 'set > c:\temp\evars.txt'
 :: ----------------------------------------------------
+
+set CP_PROJECTS_EVARS=%CP_PROJECTS_DIR%ProjectEvars.bat
+set REF_PROJECTS_EVARS=%REF_PROJECTS_DIR%ProjectEvars.bat
+
+if exist %CP_PROJECTS_EVARS% call %CP_PROJECTS_EVARS%
+if exist %REF_PROJECTS_EVARS% call %REF_PROJECTS_EVARS%
