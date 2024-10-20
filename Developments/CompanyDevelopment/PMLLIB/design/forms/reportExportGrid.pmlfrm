@@ -59,3 +59,9 @@ define method .dataPopUp(!array is ARRAY)
   !this.dataGrid.showPopup(!array[0], !array[1])
 
 endmethod
+
+define method .export( !fullPathName is STRING )
+
+  !this.dataControl.savegridtoexcel( !fullPathName )
+
+endmethod
