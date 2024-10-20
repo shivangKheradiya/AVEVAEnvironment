@@ -1,0 +1,61 @@
+import 'GridControl'
+handle any
+endhandle
+
+setup form !!reportExportGrid size 100 20 VarChars dialog resizable
+
+  using namespace 'Aveva.Pdms.Presentation'
+  !this.formtitle = 'Report Export Grid'
+
+  container .dataGrid nobox PMLNETCONTROL 'NET' anchor top + left + right at xmin ymin width 100 height 19
+
+  using namespace 'Aveva.Core.Presentation'
+  member .dataControl  is NETGRIDCONTROL
+
+  member .headings    is ARRAY
+  member .rowSet      is ARRAY
+
+exit
+
+define method .reportExportGrid()
+
+  !menu = !this.newMenu('dataPopUp')
+  !menu.add('callback', 'Export', |!this.export()|, 'SELECT')
+
+  using namespace 'Aveva.Core.Presentation'
+  !this.dataControl = object NETGRIDCONTROL()
+
+  -- Add .net control to the container
+  !this.dataGrid.control = !this.dataControl.handle()
+
+  -- Add PML event handlers to .net controls
+  !this.dataControl.addEventHandler('onPopup', !this, 'dataPopUp')
+
+  -- Set grid visual attributes
+  !this.dataControl.columnExcelFilter(true)
+  !this.dataControl.outlookGroupStyle(false)
+  !this.dataControl.fixedRows(false)
+  -- !this.dataControl.gridHeight(1000.0)
+  !this.dataControl.editableGrid(false)
+  !this.dataControl.singleRowSelection(false)
+  !this.dataControl.columnExcelFilter(false)
+  !this.dataControl.fixedHeaders(false)
+  !this.dataControl.headerSort(true)
+  !this.dataControl.columnSummaries(false)
+
+endmethod
+
+define method .displayGrid()
+
+  using namespace 'Aveva.Core.Presentation'
+  !this.dataControl.bindToDataSource( object NETDATASOURCE('ReportExportGrid', !this.headings, !this.rowSet, '^Name') )
+
+endmethod
+
+define method .dataPopUp(!array is ARRAY)
+
+  -- Show the pop-up
+  !this.dataGrid.popup = !this.dataPopUp
+  !this.dataGrid.showPopup(!array[0], !array[1])
+
+endmethod
