@@ -1,0 +1,12 @@
+desc	|CAG|
+desc	|MISC|
+desc	|CUG|
+desc	|ELE|
+desc	|GEN|
+desc	|HAN|
+desc	|HVC|
+desc	|INS|
+desc	|MDS|
+desc	|MEC|
+desc	|PIP|
+desc	|SAF|

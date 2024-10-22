@@ -1,0 +1,60 @@
+define object reportExtractor
+
+  member .scope                         is DBREF
+  member .scopeElementTypes             is STRING
+  member .filter                        is STRING
+  member .elements                      is ARRAY
+  member .expressions                   is ARRAY
+  member .result                        is ARRAY
+  member .logs                          is ARRAY
+
+endobject
+
+define method .reportExtractor()
+
+endmethod
+
+define method .CollectAllElements()
+
+  !this.elements                       = !!collectAllFor( !this.scopeElementTypes , !this.filter , !this.scope )
+
+endmethod
+
+define method .evaluateExpressions()
+  
+  do !idx indices !this.elements
+    do !idy indices !this.expressions
+      !this.result[!idx][!idy]        = !this.elements[!idx].evaluate( object BLOCK ( !this.expressions[!idy] ) )
+      handle any
+      endhandle
+    enddo
+  enddo
+
+endmethod
+
+define method .writeLogs()
+
+  !file                                       = object file(|C:\db\xyz.txt|)
+  !file.WRITEFILE(|OVER|, !this.logs )
+
+endmethod
+
+define method .test()
+
+  if ( not undefined(!!x)) then
+    !!x.delete()
+    pml reload object reportExtractor
+  endif
+
+  !!x = object reportExtractor()
+  !!x.scopeElementTypes = |FLAN INST VALV|
+  !!x.scope = /SITE-PIPING-AREA01
+  !!x.filter = ||
+  !!x.EXPRESSIONS[1] = |NAME|
+  !!x.EXPRESSIONS[2] = |TYPE|
+  !!x.EXPRESSIONS[3] = |DTXR|
+  !!x.CollectAllElements()
+  !!x.evaluateExpressions()
+  !!X.writeLogs()
+
+endmethod

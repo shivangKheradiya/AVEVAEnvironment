@@ -1,0 +1,99 @@
+REPRE PROF ON
+REPR TUBE ON
+REPRE OBST OFF
+REPRE INSUL OFF
+
+!siteFunc               = object string()
+!pService               = object string()
+
+!ReviewFileSettingDir   = !!evar(|REVIEW_FILE_SETTINGS_DIR|)
+!ReviewFileEvar         = !!evar(|REVIEW_FILE_DIR|)
+
+var !projCode project code
+!siteFileDir            = !ReviewFileSettingDir + !projCode + |/SiteConditions.txt|
+!pServFileDir           = !ReviewFileSettingDir + !projCode + |/PipeServices.txt|
+!pReviewFileDir         = !ReviewFileEvar + !projCode + |/| + !projCode + |.rvm|
+!iReviewFileDir         = !ReviewFileEvar + !projCode + |/| + !projCode + |_Insu.rvm|
+!attFilesFilesName      = !ReviewFileEvar + !projCode + |/| + !projCode
+
+!siteFile               = object file( !siteFileDir )
+!pServFile              = object file( !pServFileDir )
+
+!siteList               = !siteFile.readfile()
+!pServList              = !pServFile.readfile()
+
+do !s indices !siteList
+  !spliteLine           = !siteList[$!s].split()
+  --Q VAR !spliteLine
+  if !S EQ  1 then
+    !siteFunc           =  !spliteLine[1] &| OF SITE EQ | & !spliteLine[2]
+  else
+    !siteFunc           =  !spliteLine[1] &| OF SITE EQ | & !spliteLine[2] & | OR | & !siteFunc
+  endif
+  --Q VAR !siteFunc
+enddo
+
+!siteFile.CLOSE()
+
+EXPORT FILE /$!PReviewFileDir OVER
+EXPORT HOLES ON 
+EXPORT REPRE ON
+
+EXPORT AUTOCOLOUR RESET 
+EXPORT AUTOCOLOUR ON 
+
+EXPORT AUTOCOLOUR ALL ZONE WITH ( MAT ( ATTRIB DESC , 'FOUNDATION' ) NEQ 0 ) 			COL 	58 TRANSLUCENCY ( 0 ) EDGES ON
+
+EXPORT AUTOCOLOUR ALL GENSEC 	COLOUR 	147 	TRANSLUCENCY ( 0 ) EDGES ON
+
+EXPORT AUTOCOLOR ( ALL RLADDR ) WITH ( $!SITEFUNC ) COL 4  TRANSLUCENCY ( 0 ) EDGES ON
+EXPORT AUTOCOLOR ( ALL HANDRA ) WITH ( $!SITEFUNC ) COL 4  TRANSLUCENCY ( 0 ) EDGES ON
+
+EXPORT AUTOCOLOUR ALL INST 	COLOUR 	10 	TRANSLUCENCY ( 0 ) EDGES ON
+
+EXPORT AUTOCOLOUR ALL EQUI WITH ( MAT ( ATTRIB DESC , 'ROAD' ) NEQ 0 ) 						COL 	17 	TRANSLUCENCY ( 0 ) EDGES ON
+EXPORT AUTOCOLOUR ALL EQUI COLOUR 272  TRANSLUCENCY ( 0 ) EDGES ON
+
+
+--EXPORT AUTOCOLOUR ALL EQUI WITH ( MAT ( ATTRIB NAME , '_ACCESS_WAY' ) NEQ 0 ) 			COL 	158 TRANSLUCENCY ( 0 ) EDGES ON
+--EXPORT AUTOCOLOUR ALL EQUI WITH ( MAT ( ATTRIB NAME , '_FORKLIFT_MOVEMENT' ) NEQ 0 ) 		COL 	158 TRANSLUCENCY ( 0 ) EDGES ON
+--EXPORT AUTOCOLOUR ALL EQUI WITH ( MAT ( ATTRIB NAME , '_MAINTENANCE_ACCESS' ) NEQ 0 ) 	COL 	158 TRANSLUCENCY ( 0 ) EDGES ON
+
+EXPORT AUTOCOLOUR ALL NOZZ 	COLOUR 	10 	TRANSLUCENCY ( 0 ) EDGES ON
+--EXPORT AUTOCOLOUR ALL PIPE 	COLOUR 	5 	TRANSLUCENCY ( 0 ) EDGES ON
+
+do !s indices !pServList
+  !spliteLine           = !pServList[$!s].split()
+  -- q var !spliteLine[1] !spliteLine[2]
+  EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , |$!spliteLine[1]| ) 	NEQ 0 )	COLOUR 	$!spliteLine[2]	TRANSLUCENCY ( 0 ) EDGES ON
+enddo
+
+EXPORT ALL SITES WITH $!SITEFUNC
+EXPORT FINISH
+
+
+REPRE OBST ON TRANSLUCENCY 75
+REPRE INSUL ON TRANSLUCENCY 75
+
+EXPORT FILE /$!IReviewFileDir OVER
+EXPORT AUTOCOLOR DISPLAYEXPORT ON
+EXPORT HOLES ON
+EXPORT REPRE ON
+
+--do !s indices !pServList
+--!spliteLine = !pServList[$!s].SPLIT()
+--EXPORT AUTOCOLOUR ALL PIPE WITH ( MAT ( ATTRIB NAME , !spliteLine[1] ) 	NEQ 0 )	COLOUR 	$!spliteLine[2]	TRANSLUCENCY ( 0 ) EDGES ON
+--enddo
+
+EXPORT ALL SITES WITH $!SITEFUNC
+EXPORT FINISH
+
+var !site collect all site WITH $!SITEFUNC
+do !i indices !site
+  $!site[$!i]
+  !!attdumpFile( !attFilesFilesName &|_| & !i & |.att|)
+enddo
+
+!pServFile.close()
+
+FINISH

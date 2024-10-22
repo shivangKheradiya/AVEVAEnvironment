@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserInterfaceCustomization xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="www.aveva.com">
+  <Version>1.0</Version>
+  <FormsMetaData />
+  <Tools />
+  <InstanceTools />
+  <MenuBar />
+  <CommandBars />
+  <TaskPanes />
+  <ContextMenus />
+  <AreaLeftTools />
+  <AreaRightTools />
+  <FooterTools />
+  <NavigationMenuTools />
+  <QATTools />
+  <ContextualTabGroups />
+  <TabToolbarTools />
+  <Tabs />
+  <MiniToolbarTools />
+  <Namespace>CompanyDesignModule</Namespace>
+</UserInterfaceCustomization>

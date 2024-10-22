@@ -1,0 +1,170 @@
+define function !!attdumpFile(!filename is string)
+
+trace off
+
+$* Initialise Variables
+ !filet = !filename.replace(|/|,|_|)
+ var !FILE    |$!filet|
+ var !DILM    |:=|
+ var !SEPR    |&end&|
+ var !IGNORE  |,NAME,OWNER,|
+ var !AIGNORE |,unset,=0/0,|
+ !ODEPTH = DDEPTH
+ !PDEPTH = -99
+ !REFE =  REFE
+ !output = object array()
+$* Check for filename
+ if(|$!FILE| eq ||) then
+   $p You must supply a filename.
+   return
+ endif
+
+ var !DATE clock date
+ var !TIME clock time
+$* Write Header
+ !output.append(|CADC_Attributes_File v1.0 , start: NEW , end: END , name_end: $!DILM , sep: $!SEPR|)
+ !output.append(|NEW Header Information|)
+
+ var !DPRT compose |  Source$!DILM PDMS Data $!SEPR Date$!DILM $!DATE$n $!SEPR Time$!DILM $!TIME|
+ !output.append(!DPRT[1])
+ var !MDB MDB
+ var !PROJECT PROJECT CODE
+ var !NAME name of site
+ var !DPRT compose |  Project$!DILM $!PROJECT $!SEPR MDB$!DILM $!MDB $!SEPR Element$!DILM $!NAME|
+ !output.append(!DPRT[1])
+ !output.append(|END|)
+ !output.append(|NEW /*|)
+ !output.append(|    Name:=  /*|)
+ !output.append(|    Type:=  SITE|)
+ !output.append(|    Lock:=  false|)
+
+!fileobj = object file(|$!file|)
+!fileobj.writefile(|OVERWRITE|,!output)
+
+--------------------------------------------------------------------
+--GOLABEL /EXIT
+--------------------------------------------------------------------
+
+!fileobj.open(|APPEND|)
+$* Get element
+$P -- Start data collection
+ var !DATE clock date
+ var !TIME clock time
+$P Date:$!date Time:$!time
+
+
+  var !COLL collect all with type neq |TUBI| and type neq |SNOD| and type neq |SJOI| and type neq |VERT| and type neq |POIN| and type neq |POGO| for site
+
+$P -- End whole data collection
+ var !DATE clock date
+ var !TIME clock time
+$P Date:$!date Time:$!time
+
+$* Loop through the list of elements
+$P -- Start attribut extraction
+ var !DATE clock date
+ var !TIME clock time
+$P Date:$!date Time:$!time
+
+
+ do !INDX indices !COLL
+
+   $!COLL[$!INDX]
+
+  $* Hierarchy level
+   !DEPTH = DDEPTH
+   !TAB = !DEPTH * 2 - !ODEPTH * 2
+   !ITAB = !TAB + 2
+
+  $* End(s)
+   if(!DEPTH eq !PDEPTH and !PDEPTH neq -99) then
+     var !DPRT compose space $!TAB |END|
+!fileobj.writerecord(!DPRT[1])
+   elseif ($!DEPTH lt $!PDEPTH) then
+
+     do !INDXA from $!PDEPTH to $!DEPTH by -1
+       var !DPRT compose space $!INDXA |END|
+!fileobj.writerecord(!DPRT[1])
+     enddo
+
+   endif
+
+   !PDEPTH = !DEPTH
+
+  $* Attributes of element
+   var !ATTL delete
+   var !ATTL attlist
+
+  $* Check it item is owned by a branch
+   if(TYPE neq |WORL|) then
+     if(TYPE of OWNER eq |BRAN| and NOT BADREF(SPREF)) then
+	   !ATTL.append(|PPBORE1|)
+	   !ATTL.append(|PPBORE2|)
+	   !ATTL.append(|PPBORE3|)
+       !ATTL.append(|APOS|)
+       !ATTL.append(|ABOP|)
+       !ATTL.append(|LPOS|)
+       !ATTL.append(|LBOP|)
+	   !ATTL.append(|DTXR|)
+	   !ATTL.append(|MTXX|)	   
+       !ATTL.append(|itle of il tub of ce|)
+       !ATTL.append(|INSU|)
+     endif
+     if(TYPE eq |BRAN| ) then
+       !ATTL.append(|itle of il tub of ce|)
+     endif
+   endif
+
+  $* Get name
+   !NAME = FULLNAME
+   var !DPRT compose space $!TAB |NEW $!NAME|
+!fileobj.writerecord(!DPRT[1])
+
+   !ASIZE = arraywidth(!ATTL) + 3
+
+  $* Loop through attribute array
+   do !ATTR values !ATTL
+
+     skip if(match(!IGNORE,|,$!ATTR$n,|) gt 0)
+     var !ATTRIB (ATTRIB $!ATTR)
+     handle ANY
+       var !ATTRIB $!ATTR
+       handle any
+         var !ATTRIB ||
+       endhandle
+     endhandle
+     !ATTRIB = trim(!ATTRIB)
+     if(!ATTRIB neq || and match(!AIGNORE,|,$!ATTRIB$n,|) eq 0) then
+       var !DPRT compose space $!ITAB |$!ATTR$n$!DILM| width $!ASIZE R space 2 |$!ATTRIB|
+!fileobj.writerecord(!DPRT[1])
+     endif
+   enddo
+
+ enddo
+
+if !DEPTH gt !ODEPTH then
+  do !INDXA from $!DEPTH to $!ODEPTH by -1
+    !TAB = !INDXA * 2 - !ODEPTH * 2
+    var !DPRT compose space $!TAB |END|
+!fileobj.writerecord(!DPRT[1])
+  enddo
+endif
+$P -- End attribute collection
+ var !DATE clock date
+ var !TIME clock time
+$P Date:$!date Time:$!time
+
+--------------------------------------------------------------------
+LABEL /EXIT
+--------------------------------------------------------------------
+
+!fileobj.close()
+
+$!REFE
+
+$P -- End writing file
+ var !DATE clock date
+ var !TIME clock time
+$P Date:$!date Time:$!time
+$* Hide the form
+endfunction

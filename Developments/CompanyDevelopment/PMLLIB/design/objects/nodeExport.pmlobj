@@ -1,0 +1,170 @@
+define object nodeExport
+	member .start is array
+	member .end is array
+	member .gensecs is array
+	member .i is real
+	member .uniquePos is array
+	member .ce is dbref
+	member .GensecNoNodeNo is array
+	member .NodeNoArray is array
+	member .outputArray is array
+	member .table is array
+	member .materialArray is array
+	member .MaterialWriteArray is array
+	member .UnAssignedMaterialSectionsArray is array
+endobject
+
+define method .nodeExport()
+	!this.ce = ce
+	!this.gensecs = !!collectAllFor( 'GENSEC' , '', !this.ce)
+	!this.readStdTableData()
+endmethod
+
+define method .readStdTableData()
+
+	using namespace 'Aveva.Core.Presentation'
+	import 'GridControl'
+	handle any
+	endhandle
+
+	!grid = object NETGRIDCONTROL()
+	!source = object NETDATASOURCE ('AttributeData', 'E:\3d-project\Customs\Macros\PMLLIB\SKdev\AvevaToSTMapping.xlsx' )
+
+	!grid.bindToDataSource(!source)
+	!headings = !grid.getColumns()
+
+	--q var !headings
+	do !i indices !headings
+		!this.table[!i] = !grid.getColumn(!headings[!i])
+	enddo
+
+endmethod
+
+define method .getStartEnd()
+	!gensecs = !this.gensecs
+	do !g Indices !gensecs
+		!poinsp = !!collectAllFor('POINSP', '' , !gensecs[!g] )
+		!this.start[!g] = !poinsp[1]
+		!this.end[!g] = !poinsp[2]
+	enddo
+endmethod
+
+define method .getStartEnd()
+	!gensecs = !this.gensecs
+	do !g Indices !gensecs
+		!poinsp = !!collectAllFor('POINSP', '' , !gensecs[!g] )
+		!this.start[!g] = !this.roundUp(!poinsp[1].POSITION.wrt(world)).string()
+		!this.end[!g] = !this.roundUp(!poinsp[2].POSITION.wrt(world)).string()
+		!this.uniquePos.append(!this.roundUp(!poinsp[1].POSITION.wrt(world)).string())
+		!this.uniquePos.append(!this.roundUp(!poinsp[2].POSITION.wrt(world)).string())
+	enddo
+	!this.uniquePos.unique()
+endmethod
+
+define method .roundUp(!p is position) is position
+!q = object position()
+!q.east 	= !p.east.string('d0').real()
+!q.NORTH 	= !p.NORTH.string('d0').real()
+!q.UP 		= !p.UP.string('d0').real()
+!q.ORIGIN 	= !p.ORIGIN
+return !q
+endmethod
+
+define method .getMaterialArray()
+	!gensecs = !this.gensecs
+	!this.crMaterialArray()
+	do !g Indices !gensecs
+		!s = ''
+		!s = !s + !g.string() +  ' '
+		-- !s = !s + !this.uniquePos.findfirst(!this.start[!g]).string() + ' '
+		-- !s = !s + !this.uniquePos.findfirst(!this.end[!g]).string() + ';'
+		!indexOfSpref = !this.table[1].FindFirst(!gensecs[$!g].spref.name)
+		handle any
+			!this.UnAssignedMaterialSectionsArray.append(!s)
+			skip
+		endhandle
+		!this.materialArray[!indexOfSpref].append(!s)
+	enddo
+	!this.appendStaddMaterial()
+endmethod
+
+define method .crMaterialArray()
+	do !i Indices !this.table[1]
+		!this.materialArray[!i] = object array()
+	enddo
+endmethod
+
+define method .appendStaddMaterial()
+	do !i Indices !this.materialArray
+		!this.materialArray[!i].append(!this.table[2][$!i])
+	enddo
+endmethod
+
+define method .crMaterialWriteArray()
+	!index = 0
+	do !i Indices !this.materialArray
+		!index = !index + 1
+		!this.MaterialWriteArray[!index] = ''
+		skip if ( !this.materialArray[!i].size().eq(1))
+		do !j indices !this.materialArray[!i]
+			if !this.MaterialWriteArray[!index].length().gt(1000) then
+				!index = !index + 1
+				!this.MaterialWriteArray[!index] = !this.materialArray[$!i][$!j]
+			else
+				!this.MaterialWriteArray[!index] = !this.MaterialWriteArray[!index] & !this.materialArray[$!i][$!j]
+			endif 
+		enddo
+	enddo
+endmethod
+
+define method .getGensecNoNodeNo()
+	!gensecs = !this.gensecs
+	do !g Indices !gensecs
+		!s = ''
+		!s = !s + !g.string() +  ' '
+		!s = !s + !this.uniquePos.findfirst(!this.start[!g]).string() + ' '
+		!s = !s + !this.uniquePos.findfirst(!this.end[!g]).string() + ';'
+		!this.GensecNoNodeNo.append(!s)
+	enddo
+endmethod
+
+define method .getNodeNo()
+	!uniquePos = !this.uniquePos
+	do !u Indices !uniquePos
+		!pos = !uniquePos[!u].split(' ')
+		!s = ''
+		!s = !s + !u.string() + ' ' 
+		!s = !s + !pos[2].replace('mm' , '') + ' '
+		!s = !s + !pos[6].replace('mm' , '') + ' '
+		!s = !s + !pos[4].replace('mm' , '') + ';'
+		!this.NodeNoArray.append(!s)
+	enddo
+endmethod
+
+define method .appendarray()
+	!this.outputArray.append(|MEMBER INCIDENCES|)
+	!this.outputArray.appendarray(!this.GensecNoNodeNo)
+	!this.outputArray.append(|JOINT COORDINATES|)
+	!this.outputArray.appendarray(!this.NodeNoArray)
+	!this.outputArray.append(|MATERIAL PROPERTIES|)
+	!this.outputArray.appendarray(!this.MaterialWriteArray)
+	!this.outputArray.append(|UnAssigned Material Sections Array|)
+	!this.outputArray.appendarray(!this.UnAssignedMaterialSectionsArray)
+endmethod
+
+define method .saveFile()
+	!name = |C:\db| + !this.ce.name + '.txt'
+	!file = object file(!name)
+	!file.WRITEFILE('OVER', !this.outputArray)
+endmethod
+
+define method .test()
+	!N.DELETE()
+	PML RELOAD OBJECT NODEEXPORT
+	!N = OBJECT nodeExport()
+	!N.getStartEnd()
+	!n.getGensecNoNodeNo()
+	!n.getNodeNo()
+	!n.appendarray()
+endmethod
+
