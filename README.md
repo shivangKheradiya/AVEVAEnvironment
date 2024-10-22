@@ -28,4 +28,4 @@ Repository is Representing AVEVA Environment implimentation which helps To manag
 
     - BAT: A Provision for a Company specific scripts which can automatically export all the review files.
 
-Some more PML Developments are published within [CompanyDevelopment folder](/Developments/CompanyDevelopment/) to ease the kickstarting with the repository/ Environment implimentation. 
+Some more PML Developments are published within [CompanyDevelopment folder](/Developments/CompanyDevelopment/) to kickstarting with the repository/ Environment implimentation.
