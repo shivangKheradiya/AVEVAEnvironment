@@ -1,0 +1,32 @@
+define function !!DesNWExport(!FileNameWithPath is string, !ScopeElements is array, !AttOrRvmOrBoth is STRING, !InsuColour is REAL, !InsuTranslucency is REAL) 
+
+  !DesNWExporter                                    = object DesNWExporter()
+
+  !DesNWExporter.AttFileName                        = !FileNameWithPath + |.att|
+  !DesNWExporter.RVMFileName                        = !FileNameWithPath + |.rvm|
+
+  !DesNWExporter.SetupInputFiles()
+  !DesNWExporter.SetupNWRepr()
+  
+  !DesNWExporter.DesReviewSettings.NWScopeData    = !ScopeElements
+  !DesNWExporter.DesReviewSettings.NWAttScopeData = !ScopeElements
+
+  if !AttOrRvmOrBoth.upcase().eq(|ATT|)  then
+    !DesNWExporter.dumpAtts()
+  elseif !AttOrRvmOrBoth.upcase().eq(|RVM|) then
+    !DesNWExporter.ExportNWScope()
+  elseif !AttOrRvmOrBoth.upcase().eq(|INSU|) then
+    !DesNWExporter.InsuColour                       = !InsuColour
+    !DesNWExporter.InsuTranslucency                 = !InsuTranslucency
+    !DesNWExporter.SetupNWInsuRepr()
+    !DesNWExporter.ExportNWInsuScope()
+  elseif !AttOrRvmOrBoth.upcase().eq(|ALL|) then
+    !DesNWExporter.ExportNWScope()
+    !DesNWExporter.dumpAtts()
+    !DesNWExporter.InsuColour                       = !InsuColour
+    !DesNWExporter.InsuTranslucency                 = !InsuTranslucency
+    !DesNWExporter.SetupNWInsuRepr()
+    !DesNWExporter.ExportNWInsuScope()
+  endif
+
+endfunction

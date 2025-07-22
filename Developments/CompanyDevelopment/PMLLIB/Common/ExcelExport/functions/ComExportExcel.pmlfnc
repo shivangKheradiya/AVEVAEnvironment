@@ -1,4 +1,4 @@
-define function !!TRComExportExcel( !Headings is array, !Data is array )
+define function !!ComExportExcel( !Headings is array, !Data is array )
   
   import 'PMLFileBrowser'
   handle (1000,0)

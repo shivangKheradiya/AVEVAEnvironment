@@ -1,6 +1,6 @@
-define object TRDesNWExporter
+define object DesNWExporter
 
-  member .TRDesReviewSettings             is TRDESREVIEWSETTINGS
+  member .DesReviewSettings               is DesReviewSettings
   member .attOutput                       is ARRAY
   member .RVMFileName                     is STRING
   member .AttFileName                     is STRING
@@ -9,15 +9,15 @@ define object TRDesNWExporter
 
 endobject
 
-define method .TRDesNWExporter()
-  !this.TRDesReviewSettings             = object TRDesReviewSettings()
+define method .DesNWExporter()
+  !this.DesReviewSettings             = object DesReviewSettings()
 endmethod
 
 define method .SetupInputFiles()
-  !this.TRDesReviewSettings.SetFilePath()
-  !this.TRDesReviewSettings.ReadFile()
-  !this.TRDesReviewSettings.SetupNWAttSettingsData()
-  !this.TRDesReviewSettings.SetupNWSettingsData()
+  !this.DesReviewSettings.SetFilePath()
+  !this.DesReviewSettings.ReadFile()
+  !this.DesReviewSettings.SetupNWAttSettingsData()
+  !this.DesReviewSettings.SetupNWSettingsData()
 endmethod
 
 define method .SetupNWRepr()
@@ -63,7 +63,7 @@ endmethod
 define method .ExportNWScope()
 
   !rvmFileName                          = !this.RVMFileName
-  !NWScopeData                          = !this.TRDesReviewSettings.NWScopeData
+  !NWScopeData                          = !this.DesReviewSettings.NWScopeData
   !exportCommands                       = object ARRAY()
 
   !isSame                               = !this.SameAsOld(!rvmFileName , !NWScopeData )
@@ -71,11 +71,11 @@ define method .ExportNWScope()
     return
   endif
 
-  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXPRESSIONS
-    !expression                       = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXPRESSIONS[!idx]
-    !colour                           = !this.TRDESREVIEWSETTINGS.NWSETTINGSCOLOR[!idx]
-    !TRANSLUCENCY                     = !this.TRDESREVIEWSETTINGS.NWSETTINGSTRANSLUCENCY[!idx]
-    !edge                             = !this.TRDESREVIEWSETTINGS.NWSETTINGSEDGE[!idx]
+  do !idx indices !this.DesReviewSettings.NWSETTINGSEXPRESSIONS
+    !expression                       = !this.DesReviewSettings.NWSETTINGSEXPRESSIONS[!idx]
+    !colour                           = !this.DesReviewSettings.NWSETTINGSCOLOR[!idx]
+    !TRANSLUCENCY                     = !this.DesReviewSettings.NWSETTINGSTRANSLUCENCY[!idx]
+    !edge                             = !this.DesReviewSettings.NWSETTINGSEDGE[!idx]
     !exportCommands.append( |EXPORT AUTOCOLOUR | + !expression + | COL ( | + !colour + | ) TRANSLUCENCY ( | + !TRANSLUCENCY + | ) EDGES | + !edge )
   enddo
 
@@ -87,8 +87,8 @@ define method .ExportNWScope()
   enddo
 
   -- EXPORT EXCLUDE all ( ZONE EQUI SUBE PIPE BRAN STRU FRMW ) with :TRExcludeRvm
-  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA
-    !excludeElement                   = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA[!idx]
+  do !idx indices !this.DesReviewSettings.NWSETTINGSEXCLUDEDATA
+    !excludeElement                   = !this.DesReviewSettings.NWSETTINGSEXCLUDEDATA[!idx]
     EXPORT EXCLUDE $!excludeElement
     handle any
     endhandle
@@ -109,7 +109,7 @@ endmethod
 define method .ExportNWInsuScope()
 
   !rvmFileName                          = !this.RVMFileName.replace('.rvm', '_Insu.rvm')
-  !NWScopeData                          = !this.TRDesReviewSettings.NWScopeData
+  !NWScopeData                          = !this.DesReviewSettings.NWScopeData
   !exportCommands                       = object ARRAY()
 
   !isSame                               = !this.SameAsOld(!rvmFileName , !NWScopeData )
@@ -127,8 +127,8 @@ define method .ExportNWInsuScope()
   endhandle
 
   -- EXPORT EXCLUDE all ( ZONE EQUI SUBE PIPE BRAN STRU FRMW ) with :TRExcludeRvm
-  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA
-    !excludeElement                   = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA[!idx]
+  do !idx indices !this.DesReviewSettings.NWSETTINGSEXCLUDEDATA
+    !excludeElement                   = !this.DesReviewSettings.NWSETTINGSEXCLUDEDATA[!idx]
     EXPORT EXCLUDE $!excludeElement
     handle any
     endhandle
@@ -148,7 +148,7 @@ endmethod
 
 define method .dumpAtts()
 
-  !NWAttScopeData                     = !this.TRDesReviewSettings.NWAttScopeData
+  !NWAttScopeData                     = !this.DesReviewSettings.NWAttScopeData
 
   !DILM                               = |:=|
   !SEPR                               = |&end&|
@@ -185,7 +185,7 @@ define method .dumpAtts()
 
     do !elm values !ScopeRefe
       !!ce                      = !elm
-      !actTypeIdx               = !this.TRDesReviewSettings.ElementTypes.findfirst( !!ce.acttype )
+      !actTypeIdx               = !this.DesReviewSettings.ElementTypes.findfirst( !!ce.acttype )
       skip if( !actTypeIdx.set().not() )
 
       $* Hierarchy level
@@ -213,14 +213,14 @@ define method .dumpAtts()
       !NAME = FULLNAME
       var !DPRT compose space $!TAB |NEW $!NAME|
       !this.attOutput.append(!DPRT[1])
-      !ASIZE = arraywidth( !this.TRDesReviewSettings.ElementAtts[!actTypeIdx] ) + 3
+      !ASIZE = arraywidth( !this.DesReviewSettings.ElementAtts[!actTypeIdx] ) + 3
 
       !upCaseAttl                         = object ARRAY()
       $* Loop through attribute array
       do !ATTR values !ATTL
         !upCaseAttl.append(!attr.upcase())
 
-        !isRequired             = !this.TRDesReviewSettings.ElementAtts[!actTypeIdx].findfirst(!attr.upcase())
+        !isRequired             = !this.DesReviewSettings.ElementAtts[!actTypeIdx].findfirst(!attr.upcase())
         skip if( !isRequired.set().not() )
 
         skip if(match(!IGNORE,|,$!ATTR$n,|) gt 0)
@@ -241,10 +241,10 @@ define method .dumpAtts()
       enddo
 
       -- Insert All Required pml EXPRESSIONS
-      do !idx index !this.TRDesReviewSettings.ElementAtts[!actTypeIdx]
-        !isInAttList                      = !upCaseAttl.findfirst(!this.TRDesReviewSettings.ElementAtts[!actTypeIdx][!idx]).set()
+      do !idx index !this.DesReviewSettings.ElementAtts[!actTypeIdx]
+        !isInAttList                      = !upCaseAttl.findfirst(!this.DesReviewSettings.ElementAtts[!actTypeIdx][!idx]).set()
         if (!isInAttList.not()) then
-          !ATTR                           = !this.TRDesReviewSettings.ElementAtts[!actTypeIdx][!idx]
+          !ATTR                           = !this.DesReviewSettings.ElementAtts[!actTypeIdx][!idx]
           !exp                            = object EXPRESSION(!attr)
           handle any
             skip

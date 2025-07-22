@@ -1,4 +1,4 @@
-define object TRDesReviewSettings
+define object DesReviewSettings
 
   member .NWAttSettingsPath       is STRING
   member .NWSettingsPath          is STRING
@@ -22,7 +22,7 @@ define object TRDesReviewSettings
 
 endobject
 
-define method .TRDesReviewSettings()
+define method .DesReviewSettings()
 
   !this.cuProject                 = current project
 
