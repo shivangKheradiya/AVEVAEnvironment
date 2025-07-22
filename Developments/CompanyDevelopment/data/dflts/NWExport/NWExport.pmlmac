@@ -1,0 +1,20 @@
+!FileNameWithPath                           = |C:\Temp\SiteName|
+
+!ScopeElements[1]                           = /001-2-CAU23-VE
+!ScopeElements[2]                           = /001-2-CAU23-TL
+!ScopeElements[3]                           = /001-2-CAU23-SU
+!ScopeElements[4]                           = /001-2-CAU23-SR
+!ScopeElements[5]                           = /001-2-CAU23-SA
+!ScopeElements[6]                           = /001-2-CAU23-PI
+!ScopeElements[7]                           = /001-2-CAU23-IN
+!ScopeElements[8]                           = /001-2-CAU23-HV
+!ScopeElements[9]                           = /001-2-CAU23-HA
+
+-- For Extracting RVM
+!!TRDesNWExport(!FileNameWithPath, !ScopeElements, |rvm|, 0, 0)
+-- For Extracting ATT
+-- !!TRDesNWExport(!FileNameWithPath, !ScopeElements, |att|, 0, 0)
+-- For Extracting INSU
+-- !!TRDesNWExport(!FileNameWithPath, !ScopeElements, |insu|, 50, 75 )
+-- For Extracting ALL
+-- !!TRDesNWExport(!FileNameWithPath, !ScopeElements, |both|, 0, 0)

@@ -1,0 +1,99 @@
+define object TRDesReviewSettings
+
+  member .NWAttSettingsPath       is STRING
+  member .NWSettingsPath          is STRING
+  member .NWSettingsExcludePath   is STRING
+
+  member .NWAttSettingsData       is ARRAY
+  member .NWSettingsData          is ARRAY
+  member .NWSettingsExcludeData   is ARRAY
+  member .NWAttScopeData          is ARRAY
+  member .NWScopeData             is ARRAY
+
+  member .cuProject               is PROJECT
+  
+  member .ElementTypes            is ARRAY
+  member .ElementAtts             is ARRAY
+
+  member .NWSettingsExpressions   is ARRAY 
+  member .NWSettingsColor         is ARRAY
+  member .NWSettingsTranslucency  is ARRAY
+  member .NWSettingsEdge          is ARRAY
+
+endobject
+
+define method .TRDesReviewSettings()
+
+  !this.cuProject                 = current project
+
+endmethod
+
+define method .SetFilePath()
+
+  !projCode                       = !this.cuProject.code()
+  !dfltsPath                      = !!evar( !projCode + |dflts| )
+  !settingFolder                  = !dfltsPath + |\NWSettings\|
+
+  !this.NWAttSettingsPath         = !settingFolder + |NWAttSettings.txt|
+  !this.NWSettingsPath            = !settingFolder + |NWSettings.txt|
+  !this.NWSettingsExcludePath     = !settingFolder + |NWSettingsExclude.txt|
+
+endmethod
+
+define method .ReadFile()
+
+  !file                           = object file( !this.NWAttSettingsPath )
+  !exist                          = !file.exists()
+  if ( !exist ) then
+    !this.NWAttSettingsData       = !file.ReadFile()
+  endif
+
+  !file                           = object file( !this.NWSettingsPath )
+  !exist                          = !file.exists()
+  if ( !exist ) then
+    !this.NWSettingsData          = !file.ReadFile()
+  endif
+
+  !file                           = object file( !this.NWSettingsExcludePath )
+  !exist                          = !file.exists()
+  if ( !exist ) then
+    !this.NWSettingsExcludeData   = !file.ReadFile()
+  endif
+
+endmethod
+
+
+define method .SetupNWAttSettingsData()
+
+  do !i indices !this.NWAttSettingsData
+    !isComment                    = !this.NWAttSettingsData[!i].match(|--|).neq(0)
+    skip if( !isComment )
+
+    !data = !this.NWAttSettingsData[!i].split(|#|)
+    !this.ElementAtts[!i]          = object array()
+
+    do !j indices !data
+      if !this.ElementTypes.findfirst(!data[1].trim()).set() then
+        !this.ElementAtts[!i].append(!data[!j].trim())
+      else
+        !this.ElementTypes.append(!data[1].trim())
+      endif
+    enddo
+  enddo
+
+endmethod
+
+define method .SetupNWSettingsData()
+
+  do !i indices !this.NWSettingsData
+    !isComment                    = !this.NWSettingsData[!i].match(|--|).neq(0)
+    skip if( !isComment )
+    
+    !data                         = !this.NWSettingsData[!i].split(|#|)
+    !this.NWSettingsExpressions.append( !data[1] )
+    !this.NWSettingsColor.append( !data[2] )
+    !this.NWSettingsTranslucency.append( !data[3] )
+    !this.NWSettingsEdge.append( !data[4] )
+  enddo
+
+endmethod

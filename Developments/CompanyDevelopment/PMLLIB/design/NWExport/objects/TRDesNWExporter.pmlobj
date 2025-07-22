@@ -1,0 +1,304 @@
+define object TRDesNWExporter
+
+  member .TRDesReviewSettings             is TRDESREVIEWSETTINGS
+  member .attOutput                       is ARRAY
+  member .RVMFileName                     is STRING
+  member .AttFileName                     is STRING
+  member .InsuColour                      is REAL
+  member .InsuTranslucency                is REAL
+
+endobject
+
+define method .TRDesNWExporter()
+  !this.TRDesReviewSettings             = object TRDesReviewSettings()
+endmethod
+
+define method .SetupInputFiles()
+  !this.TRDesReviewSettings.SetFilePath()
+  !this.TRDesReviewSettings.ReadFile()
+  !this.TRDesReviewSettings.SetupNWAttSettingsData()
+  !this.TRDesReviewSettings.SetupNWSettingsData()
+endmethod
+
+define method .SetupNWRepr()
+  REPRE LEV 6
+  REPRE LEV PIPE 6
+  REPRE LEV NOZZ 6
+  REPRE LEV STRUC 7
+  REPRE LEV CABLE 6
+  REPRE OBST OFF
+  REPRE INSU OFF
+  
+  EXPORT SYSTEM /EXPDRI.SO
+  EXPORT FILENOTE ''
+  EXPORT HOLES ON
+  EXPORT REPR ON
+  
+  EXPORT AUTOCOLOUR RESET 
+  EXPORT AUTOCOLOUR ON
+  
+  EXPORT IMPLIED TUBE SEP CONT 
+endmethod
+
+define method .SetupNWInsuRepr()
+  REPRE LEV 6
+  REPRE LEV PIPE 6
+  REPRE LEV NOZZ 6
+  REPRE LEV STRUC 7
+  REPRE LEV CABLE 6
+  REPRE OBST ON TRANSL 0
+  REPRE INSU ON TRANSL 0
+  
+  EXPORT SYSTEM /EXPDRI.SO
+  EXPORT FILENOTE ''
+  EXPORT HOLES ON
+  EXPORT REPR ON
+  
+  EXPORT AUTOCOLOUR RESET 
+  EXPORT AUTOCOLOUR ON
+  
+  EXPORT IMPLIED TUBE SEP CONT 
+endmethod
+
+define method .ExportNWScope()
+
+  !rvmFileName                          = !this.RVMFileName
+  !NWScopeData                          = !this.TRDesReviewSettings.NWScopeData
+  !exportCommands                       = object ARRAY()
+
+  !isSame                               = !this.SameAsOld(!rvmFileName , !NWScopeData )
+  if (!isSame) then
+    return
+  endif
+
+  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXPRESSIONS
+    !expression                       = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXPRESSIONS[!idx]
+    !colour                           = !this.TRDESREVIEWSETTINGS.NWSETTINGSCOLOR[!idx]
+    !TRANSLUCENCY                     = !this.TRDESREVIEWSETTINGS.NWSETTINGSTRANSLUCENCY[!idx]
+    !edge                             = !this.TRDESREVIEWSETTINGS.NWSETTINGSEDGE[!idx]
+    !exportCommands.append( |EXPORT AUTOCOLOUR | + !expression + | COL ( | + !colour + | ) TRANSLUCENCY ( | + !TRANSLUCENCY + | ) EDGES | + !edge )
+  enddo
+
+  EXPORT FILE /$!rvmFileName OVER
+  do !cmd value !exportCommands
+    $!cmd
+    handle any
+    endhandle
+  enddo
+
+  -- EXPORT EXCLUDE all ( ZONE EQUI SUBE PIPE BRAN STRU FRMW ) with :TRExcludeRvm
+  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA
+    !excludeElement                   = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA[!idx]
+    EXPORT EXCLUDE $!excludeElement
+    handle any
+    endhandle
+  enddo
+
+  do !elementName value !NWScopeData
+    EXPORT $!elementName
+    handle any
+    endhandle
+  enddo
+
+  EXPORT FINISH
+  handle any
+  endhandle
+
+endmethod
+
+define method .ExportNWInsuScope()
+
+  !rvmFileName                          = !this.RVMFileName.replace('.rvm', '_Insu.rvm')
+  !NWScopeData                          = !this.TRDesReviewSettings.NWScopeData
+  !exportCommands                       = object ARRAY()
+
+  !isSame                               = !this.SameAsOld(!rvmFileName , !NWScopeData )
+  if (!isSame) then
+    return
+  endif
+
+  !colour                               = !this.InsuColour
+  !TRANSLUCENCY                         = !this.InsuTranslucency
+  !edge                                 = |ON|
+
+  EXPORT FILE /$!rvmFileName OVER
+  EXPORT AUTOCOLOUR ALL COL ( $!colour ) TRANSLUCENCY ( $!TRANSLUCENCY ) EDGES $!edge
+  handle any
+  endhandle
+
+  -- EXPORT EXCLUDE all ( ZONE EQUI SUBE PIPE BRAN STRU FRMW ) with :TRExcludeRvm
+  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA
+    !excludeElement                   = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA[!idx]
+    EXPORT EXCLUDE $!excludeElement
+    handle any
+    endhandle
+  enddo
+
+  do !elementName value !NWScopeData
+    EXPORT $!elementName
+    handle any
+    endhandle
+  enddo
+
+  EXPORT FINISH
+  handle any
+  endhandle
+
+endmethod
+
+define method .dumpAtts()
+
+  !NWAttScopeData                     = !this.TRDesReviewSettings.NWAttScopeData
+
+  !DILM                               = |:=|
+  !SEPR                               = |&end&|
+  !IGNORE                             = |,NAME,OWNER,|
+  !AIGNORE                            = |,unset,=0/0,|
+
+  var !DATE clock date
+  var !TIME clock time
+  
+  !attFileName                        = !this.AttFileName
+  !isSame                             = !this.SameAsOld( !attFileName , !NWAttScopeData )
+  if (!isSame) then
+    return
+  endif
+
+  !this.attOutput.append(|AVEVA_Attributes_File v1.0 , start: NEW , end: END , name_end: $!DILM , sep: $!SEPR|)
+  !this.attOutput.append(|NEW Header Information|)
+  !this.attOutput.append(|  Source| + !DILM + | E3D Data | + !SEPR + | Date| + !DILM + | | + !DATE + | | + !SEPR + | Time| + !DILM + | | + !TIME)
+  
+  var !MDB MDB
+  var !PROJECT PROJECT CODE
+  !this.attOutput.append(|  Project| + !DILM + | | + !PROJECT + | | + !SEPR + | MDB| + !DILM + | | + !MDB + | | + !SEPR + | Element| + !DILM + | | + !attFileName)
+  !this.attOutput.append(|END|)
+
+  do !ref values !NWAttScopeData
+    !!ce                                = !ref
+    !ODEPTH                             = DDEPTH
+    !PDEPTH                             = -99
+    !REFE                               = REFE
+    
+    !ScopeRefeColl                      = object COLLECTION()
+    !ScopeRefeColl.scope(!ref)
+    !ScopeRefe                          = !ScopeRefeColl.results()
+
+    do !elm values !ScopeRefe
+      !!ce                      = !elm
+      !actTypeIdx               = !this.TRDesReviewSettings.ElementTypes.findfirst( !!ce.acttype )
+      skip if( !actTypeIdx.set().not() )
+
+      $* Hierarchy level
+      !DEPTH                    = DDEPTH
+      !TAB                      = !DEPTH * 2 - !ODEPTH * 2
+      !ITAB                     = !TAB + 2
+      $* End(s)
+
+      if(!DEPTH eq !PDEPTH and !PDEPTH neq -99) then
+        var !DPRT compose space $!TAB |END|
+        !this.attOutput.append(!DPRT[1])
+      elseif ($!DEPTH lt $!PDEPTH) then
+        do !INDXA from $!PDEPTH to $!DEPTH by -1
+          var !DPRT compose space $!INDXA |END|
+          !this.attOutput.append(!DPRT[1])
+        enddo
+      endif
+
+      !PDEPTH = !DEPTH
+      $* Attributes of element
+      var !ATTL delete
+      var !ATTL attlist
+
+      $* Get name
+      !NAME = FULLNAME
+      var !DPRT compose space $!TAB |NEW $!NAME|
+      !this.attOutput.append(!DPRT[1])
+      !ASIZE = arraywidth( !this.TRDesReviewSettings.ElementAtts[!actTypeIdx] ) + 3
+
+      !upCaseAttl                         = object ARRAY()
+      $* Loop through attribute array
+      do !ATTR values !ATTL
+        !upCaseAttl.append(!attr.upcase())
+
+        !isRequired             = !this.TRDesReviewSettings.ElementAtts[!actTypeIdx].findfirst(!attr.upcase())
+        skip if( !isRequired.set().not() )
+
+        skip if(match(!IGNORE,|,$!ATTR$n,|) gt 0)
+
+        var !ATTRIB (ATTRIB $!ATTR)
+        handle ANY
+          var !ATTRIB $!ATTR
+          handle any
+            var !ATTRIB ||
+          endhandle
+        endhandle
+
+        !ATTRIB = trim(!ATTRIB)
+        if(!ATTRIB neq || and match(!AIGNORE,|,$!ATTRIB$n,|) eq 0) then
+          var !DPRT compose space $!ITAB |$!ATTR$n$!DILM| width $!ASIZE R space 2 |$!ATTRIB|
+          !this.attOutput.append(!DPRT[1])
+        endif
+      enddo
+
+      -- Insert All Required pml EXPRESSIONS
+      do !idx index !this.TRDesReviewSettings.ElementAtts[!actTypeIdx]
+        !isInAttList                      = !upCaseAttl.findfirst(!this.TRDesReviewSettings.ElementAtts[!actTypeIdx][!idx]).set()
+        if (!isInAttList.not()) then
+          !ATTR                           = !this.TRDesReviewSettings.ElementAtts[!actTypeIdx][!idx]
+          !exp                            = object EXPRESSION(!attr)
+          handle any
+            skip
+          endhandle
+          !ATTRIB                         = !exp.evaluate(!!ce).string()
+          handle any
+            !ATTRIB                       = ||
+          endhandle 
+          var !DPRT compose space $!ITAB |$!ATTR$n$!DILM| width $!ASIZE R space 2 |$!ATTRIB|
+          !this.attOutput.append(!DPRT[1])
+        endif
+      enddo
+    enddo
+
+    if !DEPTH gt !ODEPTH then
+      do !INDXA from $!DEPTH to $!ODEPTH by -1
+        !TAB = !INDXA * 2 - !ODEPTH * 2
+        var !DPRT compose space $!TAB |END|
+        !this.attOutput.append(!DPRT[1])
+      enddo
+    endif
+
+  enddo
+
+  !this.WriteAttOutput()
+
+endmethod
+
+
+define method .SameAsOld(!rvmFileName is string , !elements is array ) is BOOLEAN
+
+  !file                                   = object file(!rvmFileName)
+  if !file.exists() then
+    !lastModFile                          = !file.DTM()
+    do !elementName values !elements
+      !ElmCollection                      = !!collectAllFor(||, ||, !elementName )
+      do !elm value !ElmCollection
+        if !lastModFile.lt( object datetime( !elm.lastmod ) ) then
+          return false
+        endif
+      enddo
+    enddo
+  else
+    return false
+  endif
+
+  return true
+
+endmethod
+
+define method .WriteAttOutput()
+
+  !attFile                              = object FILE( !this.AttFileName )
+  !attFile.WRITEFILE(|OVER|, !this.attOutput )
+  !this.attOutput.clear()
+
+endmethod
