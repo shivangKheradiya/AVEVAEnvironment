@@ -1,0 +1,37 @@
+define function !!TRComExportExcel( !Headings is array, !Data is array )
+  
+  import 'PMLFileBrowser'
+  handle (1000,0)
+  endhandle
+  import 'GridControl'
+  handle (1000,0)
+  endhandle
+  
+  using namespace 'AVEVA.pdms.presentation'
+  using namespace 'Aveva.Core.Presentation'
+  !browser = object PMLFILEBROWSER('SAVE')
+
+  -- Default to first location from AVEVA_DESIGN_USER evar
+  !avevaUser = !!evarSplit('AVEVA_DESIGN_USER')
+  !directory = !avevaUser[1]
+
+  !seedFile = 'Report'
+  !title = 'Save Report List As'
+  !existFlag = FALSE
+  !filter = 'Microsoft Office Excel files (*.xls)|*.xls'
+  !filterIndex = 1
+
+  -- Show Browser
+  !browser.show(!directory, !seedFile, !title, !existFlag, !filter, !filterIndex)
+
+  using namespace 'Aveva.Core.Presentation'
+  !dataControl                   = object NETGRIDCONTROL()
+  !dataControl.bindToDataSource( object NETDATASOURCE('ReportExportGrid', !Headings, !Data, '^Name') )
+
+  if ( !browser.file().set() ) then
+    !dataControl.savegridtoexcel( !browser.file() )
+  else
+    !!alert.error(|Invalid Path. Please Set Path Properly.|)
+  endif
+
+endfunction
