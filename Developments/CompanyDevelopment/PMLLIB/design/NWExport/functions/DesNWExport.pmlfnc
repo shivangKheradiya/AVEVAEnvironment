@@ -1,4 +1,4 @@
-define function !!DesNWExport(!FileNameWithPath is string, !ScopeElements is array, !AttOrRvmOrBoth is STRING, !InsuColour is REAL, !InsuTranslucency is REAL) 
+define function !!DesNWExport( !FileNameWithPath is string, !ScopeElements is array, !AttOrRvmOrBoth is STRING, !InsuColour is REAL, !InsuTranslucency is REAL, !RepreLev is REAL, !RepreLevPipe is REAL, !RepreLevNozz is REAL, !RepreLevStru is REAL, !RepreLevCable is REAL ) 
 
   !DesNWExporter                                    = object DesNWExporter()
 
@@ -6,27 +6,35 @@ define function !!DesNWExport(!FileNameWithPath is string, !ScopeElements is arr
   !DesNWExporter.RVMFileName                        = !FileNameWithPath + |.rvm|
 
   !DesNWExporter.SetupInputFiles()
-  !DesNWExporter.SetupNWRepr()
   
-  !DesNWExporter.DesReviewSettings.NWScopeData    = !ScopeElements
-  !DesNWExporter.DesReviewSettings.NWAttScopeData = !ScopeElements
-
+  !DesNWExporter.TRDesReviewSettings.NWScopeData    = !ScopeElements
+  !DesNWExporter.TRDesReviewSettings.NWAttScopeData = !ScopeElements
+  
   if !AttOrRvmOrBoth.upcase().eq(|ATT|)  then
     !DesNWExporter.dumpAtts()
   elseif !AttOrRvmOrBoth.upcase().eq(|RVM|) then
+    !DesNWExporter.SetupNWRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable)
     !DesNWExporter.ExportNWScope()
   elseif !AttOrRvmOrBoth.upcase().eq(|INSU|) then
     !DesNWExporter.InsuColour                       = !InsuColour
     !DesNWExporter.InsuTranslucency                 = !InsuTranslucency
-    !DesNWExporter.SetupNWInsuRepr()
+    !DesNWExporter.SetupNWInsuRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable )
     !DesNWExporter.ExportNWInsuScope()
+  elseif !AttOrRvmOrBoth.upcase().eq(|OBST|) then
+    !DesNWExporter.InsuColour                       = !InsuColour
+    !DesNWExporter.InsuTranslucency                 = !InsuTranslucency
+    !DesNWExporter.SetupNWObstRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable )
+    !DesNWExporter.ExportNWObstScope()
   elseif !AttOrRvmOrBoth.upcase().eq(|ALL|) then
+	  !DesNWExporter.SetupNWRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable)
     !DesNWExporter.ExportNWScope()
     !DesNWExporter.dumpAtts()
     !DesNWExporter.InsuColour                       = !InsuColour
     !DesNWExporter.InsuTranslucency                 = !InsuTranslucency
-    !DesNWExporter.SetupNWInsuRepr()
+    !DesNWExporter.SetupNWInsuRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable )
     !DesNWExporter.ExportNWInsuScope()
+    !DesNWExporter.SetupNWObstRepr(!RepreLev, !RepreLevPipe, !RepreLevNozz, !RepreLevStru, !RepreLevCable )
+    !DesNWExporter.ExportNWObstScope()
   endif
 
 endfunction

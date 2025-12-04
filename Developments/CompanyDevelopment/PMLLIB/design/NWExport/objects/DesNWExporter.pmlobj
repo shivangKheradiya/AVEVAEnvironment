@@ -20,12 +20,12 @@ define method .SetupInputFiles()
   !this.DesReviewSettings.SetupNWSettingsData()
 endmethod
 
-define method .SetupNWRepr()
-  REPRE LEV 6
-  REPRE LEV PIPE 6
-  REPRE LEV NOZZ 6
-  REPRE LEV STRUC 7
-  REPRE LEV CABLE 6
+define method .SetupNWRepr(!RepreLev is REAL, !RepreLevPipe is REAL, !RepreLevNozz is REAL, !RepreLevStru is REAL, !RepreLevCable is REAL )
+  REPRE LEV       $!RepreLev      
+  REPRE LEV PIPE  $!RepreLevPipe  
+  REPRE LEV NOZZ  $!RepreLevNozz  
+  REPRE LEV STRUC $!RepreLevStru  
+  REPRE LEV CABLE $!RepreLevCable 
   REPRE OBST OFF
   REPRE INSU OFF
   
@@ -40,14 +40,35 @@ define method .SetupNWRepr()
   EXPORT IMPLIED TUBE SEP CONT 
 endmethod
 
-define method .SetupNWInsuRepr()
-  REPRE LEV 6
-  REPRE LEV PIPE 6
-  REPRE LEV NOZZ 6
-  REPRE LEV STRUC 7
-  REPRE LEV CABLE 6
-  REPRE OBST ON TRANSL 0
+define method .SetupNWInsuRepr(!RepreLev is REAL, !RepreLevPipe is REAL, !RepreLevNozz is REAL, !RepreLevStru is REAL, !RepreLevCable is REAL )
+  REPRE LEV       $!RepreLev      
+  REPRE LEV PIPE  $!RepreLevPipe  
+  REPRE LEV NOZZ  $!RepreLevNozz  
+  REPRE LEV STRUC $!RepreLevStru  
+  REPRE LEV CABLE $!RepreLevCable 
+  REPRE OBST OFF
   REPRE INSU ON TRANSL 0
+  
+  EXPORT SYSTEM /EXPDRI.SO
+  EXPORT FILENOTE ''
+  EXPORT HOLES ON
+  EXPORT REPR ON
+  
+  EXPORT AUTOCOLOUR RESET 
+  EXPORT AUTOCOLOUR ON
+  
+  EXPORT IMPLIED TUBE SEP CONT 
+endmethod
+
+define method .SetupNWObstRepr(!RepreLev is REAL, !RepreLevPipe is REAL, !RepreLevNozz is REAL, !RepreLevStru is REAL, !RepreLevCable is REAL )
+  REPRE LEV       $!RepreLev      
+  REPRE LEV PIPE  $!RepreLevPipe  
+  REPRE LEV NOZZ  $!RepreLevNozz  
+  REPRE LEV STRUC $!RepreLevStru  
+  REPRE LEV CABLE $!RepreLevCable 
+  REPRESENTATION CABLEWAY OBSTRUCTION ON TRANSLUCENCY 0
+  REPRE OBST ON TRANSL 0
+  REPRE INSU OFF
   
   EXPORT SYSTEM /EXPDRI.SO
   EXPORT FILENOTE ''
@@ -146,6 +167,46 @@ define method .ExportNWInsuScope()
 
 endmethod
 
+define method .ExportNWObstScope()
+
+  !rvmFileName                          = !this.RVMFileName.replace('.rvm', '_Obst.rvm')
+  !NWScopeData                          = !this.DesReviewSettings.NWScopeData
+  !exportCommands                       = object ARRAY()
+
+  !isSame                               = !this.SameAsOld(!rvmFileName , !NWScopeData )
+  if (!isSame) then
+    return
+  endif
+
+  !colour                               = !this.InsuColour
+  !TRANSLUCENCY                         = !this.InsuTranslucency
+  !edge                                 = |ON|
+
+  EXPORT FILE /$!rvmFileName OVER
+  EXPORT AUTOCOLOUR ALL COL ( $!colour ) TRANSLUCENCY ( $!TRANSLUCENCY ) EDGES $!edge
+  handle any
+  endhandle
+
+  -- EXPORT EXCLUDE all ( ZONE EQUI SUBE PIPE BRAN STRU FRMW ) with :TRExcludeRvm
+  do !idx indices !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA
+    !excludeElement                   = !this.TRDESREVIEWSETTINGS.NWSETTINGSEXCLUDEDATA[!idx]
+    EXPORT EXCLUDE $!excludeElement
+    handle any
+    endhandle
+  enddo
+
+  do !elementName value !NWScopeData
+    EXPORT $!elementName
+    handle any
+    endhandle
+  enddo
+
+  EXPORT FINISH
+  handle any
+  endhandle
+
+endmethod
+
 define method .dumpAtts()
 
   !NWAttScopeData                     = !this.DesReviewSettings.NWAttScopeData
@@ -211,6 +272,17 @@ define method .dumpAtts()
 
       $* Get name
       !NAME = FULLNAME
+	  
+	    --
+	    --  NEW NAME FOR TUBI
+	    if ( !!ce.type eq 'TUBI') then
+		  	var !tubiownemearr coll all tubi for owne
+		  	!countTubi                        = !tubiownemearr.FindFirst(!elm.STRING() )
+ 		  	!name                             = 'TUBE ' & !countTubi & ' of BRANCH ' & !elm.owne.name
+		  	handle any
+        endhandle
+	    endif
+      
       var !DPRT compose space $!TAB |NEW $!NAME|
       !this.attOutput.append(!DPRT[1])
       !ASIZE = arraywidth( !this.DesReviewSettings.ElementAtts[!actTypeIdx] ) + 3
