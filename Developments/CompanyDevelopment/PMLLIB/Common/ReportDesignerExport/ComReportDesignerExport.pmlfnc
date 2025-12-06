@@ -22,8 +22,8 @@ define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorEl
   endif
 
   -- To add scope to a report for limiting the data to be displayed, overriding existing scope defined in the report
-  -- !ancestorElements = '/ATEST,/BTEST'
-  -- !elements = ''
+  -- !ancestorElements[1] = /ATEST
+  -- !elements            = object array()
   !report.AddScope(!ancestorElements, !elements)
 
   using namespace 'AVEVA.pdms.presentation'
