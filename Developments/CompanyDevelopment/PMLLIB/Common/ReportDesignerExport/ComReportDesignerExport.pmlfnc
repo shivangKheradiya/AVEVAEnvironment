@@ -1,0 +1,56 @@
+define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorElements is STRING, !elements is STRING, !argNames is ARRAY, !argValues is ARRAY)
+
+  import 'ReportingAddin'
+  handle any
+  endhandle
+
+  import 'PMLFileBrowser'
+  handle any
+  endhandle
+
+  import 'GridControl'
+  handle any
+  endhandle
+
+  using namespace 'Aveva.Core.Reporting'
+  !report                     = object PMLReport()
+  
+  --For example, to add parameters to a parameterized report:
+  -- !argNames = object array()
+  -- !argNames[1] = 'param1'
+  -- !argValues = object array()
+  -- !argValues[1] = 'value1'
+  !hasNoParam                 = !argNames.size().eq(0) or !argValues.size().eq(0)
+  if ( !hasNoParam ) then
+    !report.addParameters(!argNames, !argValues)
+  endif
+
+  -- To add scope to a report for limiting the data to be displayed, overriding existing scope defined in the report
+  -- !ancestorElements = '/ATEST,/BTEST'
+  -- !elements = ''
+  !report.AddScope(!ancestorElements, !elements)
+
+  using namespace 'AVEVA.pdms.presentation'
+  using namespace 'Aveva.Core.Presentation'
+  !browser                    = object PMLFILEBROWSER('SAVE')
+
+  -- Default to first location from AVEVA_DESIGN_USER evar
+  !avevaUser                  = !!evarSplit('AVEVA_DESIGN_USER')
+  !directory                  = !avevaUser[1]
+
+  !seedFile                   = 'Report File'
+  !title                      = 'Save Report List As'
+  !existFlag                  = FALSE
+  !filter                     = 'Microsoft Office Excel files (*.xls)|*.xls'
+  !filterIndex                = 1
+
+  -- Show Browser
+  !browser.show(!directory, !seedFile, !title, !existFlag, !filter, !filterIndex)
+
+  if ( !browser.file().set() ) then
+    !report.EXPORTASXLSX(!reportFilePath, !browser.file() )
+  else
+    !!alert.error(|Invalid Path. Please Set Path Properly.|)
+  endif
+
+endfunction
