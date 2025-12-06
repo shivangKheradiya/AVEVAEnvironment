@@ -22,8 +22,8 @@ define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorEl
   endif
 
   -- To add scope to a report for limiting the data to be displayed, overriding existing scope defined in the report
-  -- !ancestorElements[1] = /ATEST
-  -- !elements            = object array()
+  -- !ancestorElements[1]     = /ATEST
+  -- !elements                = object array()
   !report.AddScope(!ancestorElements, !elements)
 
   using namespace 'AVEVA.pdms.presentation'
@@ -37,13 +37,13 @@ define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorEl
   !seedFile                   = 'Report File'
   !title                      = 'Save Report List As'
   !existFlag                  = FALSE
-  !filter                     = 'Microsoft Office Excel files (*.xls)|*.xls'
+  !filter                     = 'Microsoft Office Excel files (*.xlsx)|*.xlsx'
   !filterIndex                = 1
 
   -- Show Browser
   !browser.show(!directory, !seedFile, !title, !existFlag, !filter, !filterIndex)
 
-  if ( !browser.file().set() ) then
+  if ( !browser.file().neq('') ) then
     !report.EXPORTASXLSX(!reportFilePath, !browser.file() )
   else
     !!alert.error(|Invalid Path. Please Set Path Properly.|)
