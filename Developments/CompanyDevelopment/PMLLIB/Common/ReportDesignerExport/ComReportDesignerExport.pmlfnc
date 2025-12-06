@@ -1,4 +1,4 @@
-define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorElements is STRING, !elements is STRING, !argNames is ARRAY, !argValues is ARRAY)
+define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorElements is ARRAY, !elements is ARRAY, !argNames is ARRAY, !argValues is ARRAY)
 
   import 'ReportingAddin'
   handle any
