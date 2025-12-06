@@ -8,18 +8,14 @@ define function !!ComReportDesignerExport(!reportFilePath is STRING, !ancestorEl
   handle any
   endhandle
 
-  import 'GridControl'
-  handle any
-  endhandle
-
   using namespace 'Aveva.Core.Reporting'
   !report                     = object PMLReport()
   
-  --For example, to add parameters to a parameterized report:
-  -- !argNames = object array()
-  -- !argNames[1] = 'param1'
-  -- !argValues = object array()
-  -- !argValues[1] = 'value1'
+  -- For example, to add parameters to a parameterized report:
+  -- !argNames                = object array()
+  -- !argNames[1]             = 'param1'
+  -- !argValues               = object array()
+  -- !argValues[1]            = 'value1'
   !hasNoParam                 = !argNames.size().eq(0) or !argValues.size().eq(0)
   if ( !hasNoParam ) then
     !report.addParameters(!argNames, !argValues)
